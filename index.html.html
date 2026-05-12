@@ -1,0 +1,1279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Palmetto Infusion — Clinic Calendar Sorter</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --primary: #1a5c8a;
+  --primary-light: #2a7ab8;
+  --primary-pale: #e8f2fb;
+  --primary-pale2: #d0e6f7;
+  --accent: #e8a020;
+  --accent-light: #fdf3e0;
+  --green: #1d8a5c;
+  --green-light: #e6f7f0;
+  --red: #c0392b;
+  --red-light: #fdecea;
+  --bg: #f4f7fb;
+  --surface: #ffffff;
+  --surface2: #f8fafd;
+  --border: #dce5ef;
+  --border2: #c5d5e8;
+  --text: #1a2535;
+  --text2: #4a5e75;
+  --text3: #8a9bb0;
+  --radius: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 22px;
+  --shadow: 0 2px 12px rgba(26,92,138,0.09);
+  --shadow-lg: 0 8px 32px rgba(26,92,138,0.13);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Outfit', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+/* ── HEADER ── */
+header {
+  background: linear-gradient(135deg, #0d3d63 0%, #1a5c8a 60%, #1e6fa0 100%);
+  padding: 0 40px;
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  box-shadow: 0 3px 18px rgba(13,61,99,0.25);
+}
+.header-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  height: 70px;
+}
+.logo-wrap {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.logo-icon {
+  width: 44px; height: 44px;
+  background: rgba(255,255,255,0.15);
+  border: 2px solid rgba(255,255,255,0.25);
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px;
+}
+.logo-text h1 {
+  font-size: 17px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: -0.3px;
+  line-height: 1.1;
+}
+.logo-text p {
+  font-size: 11px;
+  color: rgba(255,255,255,0.6);
+  font-weight: 400;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+.header-spacer { flex: 1; }
+.header-badge {
+  background: rgba(232,160,32,0.2);
+  border: 1px solid rgba(232,160,32,0.4);
+  color: #ffd280;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 20px;
+  letter-spacing: 0.5px;
+}
+.header-nav {
+  display: flex;
+  gap: 6px;
+}
+.nav-btn {
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.2);
+  color: rgba(255,255,255,0.85);
+  font-family: 'Outfit', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 7px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex; align-items: center; gap: 6px;
+}
+.nav-btn:hover {
+  background: rgba(255,255,255,0.2);
+  color: #fff;
+}
+.nav-btn.active {
+  background: rgba(255,255,255,0.22);
+  color: #fff;
+  border-color: rgba(255,255,255,0.4);
+}
+
+/* ── HERO BANNER ── */
+.hero {
+  background: linear-gradient(160deg, #f0f7ff 0%, #e4f0fb 50%, #fef9ee 100%);
+  border-bottom: 1px solid var(--border);
+  padding: 36px 40px 32px;
+}
+.hero-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 32px;
+}
+.hero-text h2 {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--primary);
+  letter-spacing: -0.5px;
+  line-height: 1.2;
+}
+.hero-text p {
+  font-size: 15px;
+  color: var(--text2);
+  margin-top: 7px;
+  line-height: 1.5;
+}
+.hero-stats {
+  display: flex;
+  gap: 20px;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+.hero-stat {
+  text-align: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 14px 22px;
+  box-shadow: var(--shadow);
+}
+.hero-stat .num {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--primary);
+  line-height: 1;
+}
+.hero-stat .lbl {
+  font-size: 11px;
+  color: var(--text3);
+  margin-top: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 500;
+}
+
+/* ── MAIN CONTAINER ── */
+.container { max-width: 1200px; margin: 0 auto; padding: 32px 24px 60px; }
+
+/* ── PAGES ── */
+.page { display: none; }
+.page.active { display: block; }
+
+/* ── STEP INDICATOR ── */
+.steps {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin-bottom: 28px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: 8px;
+  box-shadow: var(--shadow);
+}
+.step {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 18px;
+  border-radius: var(--radius-lg);
+  flex: 1;
+  transition: all 0.2s;
+}
+.step.active { background: var(--primary-pale); }
+.step .step-num {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: var(--border);
+  color: var(--text3);
+  font-size: 12px;
+  font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.step.active .step-num { background: var(--primary); color: #fff; }
+.step.done .step-num { background: var(--green); color: #fff; }
+.step .step-label { font-size: 13px; font-weight: 600; color: var(--text3); }
+.step.active .step-label { color: var(--primary); }
+.step.done .step-label { color: var(--green); }
+.step-divider { width: 1px; height: 30px; background: var(--border); flex-shrink: 0; }
+
+/* ── CARDS ── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: 28px;
+  margin-bottom: 20px;
+  box-shadow: var(--shadow);
+}
+.card-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 22px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+.card-title {
+  display: flex; align-items: center; gap: 10px;
+}
+.card-icon {
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+}
+.card-icon.blue { background: var(--primary-pale); }
+.card-icon.amber { background: var(--accent-light); }
+.card-icon.green { background: var(--green-light); }
+.card-title h3 { font-size: 16px; font-weight: 600; color: var(--text); }
+.card-title p { font-size: 12px; color: var(--text3); margin-top: 1px; }
+
+/* ── DROP ZONE ── */
+.drop-zone {
+  border: 2px dashed var(--border2);
+  border-radius: var(--radius-xl);
+  padding: 64px 40px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: linear-gradient(135deg, var(--surface) 0%, var(--surface2) 100%);
+  position: relative;
+  overflow: hidden;
+}
+.drop-zone::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 0%, rgba(26,92,138,0.04) 0%, transparent 70%);
+  pointer-events: none;
+}
+.drop-zone:hover, .drop-zone.drag-over {
+  border-color: var(--primary-light);
+  background: linear-gradient(135deg, var(--primary-pale) 0%, #f0f8ff 100%);
+}
+.drop-zone .dz-icon { font-size: 56px; margin-bottom: 18px; }
+.drop-zone h2 { font-size: 22px; font-weight: 600; margin-bottom: 8px; color: var(--text); }
+.drop-zone p { color: var(--text2); font-size: 14px; margin-bottom: 24px; line-height: 1.5; }
+.drop-zone input[type=file] { display: none; }
+.drop-zone-formats {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  margin-top: 18px;
+}
+.format-badge {
+  background: var(--primary-pale);
+  color: var(--primary);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 6px;
+  letter-spacing: 0.5px;
+}
+
+/* ── BUTTONS ── */
+.btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  border: none;
+  border-radius: var(--radius);
+  padding: 11px 22px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.btn:hover { transform: translateY(-1px); }
+.btn:active { transform: translateY(0) scale(0.98); }
+.btn-primary { background: var(--primary); color: #fff; box-shadow: 0 3px 12px rgba(26,92,138,0.3); }
+.btn-primary:hover { background: var(--primary-light); }
+.btn-secondary { background: var(--surface); color: var(--text); border: 1px solid var(--border); box-shadow: var(--shadow); }
+.btn-secondary:hover { border-color: var(--border2); background: var(--surface2); }
+.btn-success { background: var(--green); color: #fff; box-shadow: 0 3px 12px rgba(29,138,92,0.3); }
+.btn-success:hover { background: #1a7a51; }
+.btn-danger { background: var(--red); color: #fff; }
+.btn-danger:hover { background: #a93226; }
+.btn-amber { background: var(--accent); color: #fff; box-shadow: 0 3px 12px rgba(232,160,32,0.3); }
+.btn-amber:hover { background: #d4920d; }
+.btn-sm { padding: 7px 14px; font-size: 12px; border-radius: 8px; }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none !important; }
+.btn-group { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+
+/* ── FILE INFO BAR ── */
+.file-info {
+  display: none;
+  align-items: center;
+  gap: 16px;
+  background: linear-gradient(135deg, var(--primary-pale) 0%, #f0f8ff 100%);
+  border: 1px solid var(--primary-pale2);
+  border-radius: var(--radius-lg);
+  padding: 16px 20px;
+  margin-bottom: 20px;
+}
+.file-info.visible { display: flex; }
+.file-icon-wrap {
+  width: 46px; height: 46px;
+  background: var(--primary);
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px;
+  flex-shrink: 0;
+}
+.file-name { font-size: 15px; font-weight: 600; color: var(--text); }
+.file-meta { font-size: 12px; color: var(--text2); margin-top: 2px; }
+.file-remove { margin-left: auto; background: none; border: none; color: var(--text3); cursor: pointer; font-size: 20px; padding: 4px 8px; border-radius: 6px; transition: all 0.15s; }
+.file-remove:hover { color: var(--red); background: var(--red-light); }
+
+/* ── SUMMARY STATS ── */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 18px 16px;
+  text-align: center;
+  box-shadow: var(--shadow);
+  transition: transform 0.2s;
+}
+.stat-card:hover { transform: translateY(-2px); }
+.stat-card .num { font-size: 30px; font-weight: 700; color: var(--primary); line-height: 1; }
+.stat-card .lbl { font-size: 11px; color: var(--text3); margin-top: 5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+.stat-card.green .num { color: var(--green); }
+.stat-card.amber .num { color: var(--accent); }
+
+/* ── CLINIC GRID ── */
+.section-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text3);
+  margin-bottom: 14px;
+}
+.clinic-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(185px, 1fr));
+  gap: 10px;
+}
+.clinic-item {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--surface2);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  cursor: pointer;
+  transition: all 0.15s;
+  user-select: none;
+}
+.clinic-item:hover { border-color: var(--primary-light); background: var(--primary-pale); }
+.clinic-item.selected { border-color: var(--primary); background: var(--primary-pale); }
+.clinic-item input[type=checkbox] { accent-color: var(--primary); width: 16px; height: 16px; flex-shrink: 0; cursor: pointer; }
+.clinic-item label { font-size: 13px; font-weight: 600; cursor: pointer; flex: 1; color: var(--text); }
+.clinic-item .count {
+  font-size: 11px;
+  color: var(--primary);
+  background: var(--primary-pale2);
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+.toggle-row { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+
+/* ── OPTIONS ── */
+.option-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+.option-item {
+  display: flex; align-items: flex-start; gap: 10px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.option-item:hover { border-color: var(--primary-light); }
+.option-item input[type=checkbox] { accent-color: var(--primary); width: 16px; height: 16px; flex-shrink: 0; margin-top: 1px; }
+.option-item-text { flex: 1; }
+.option-item-text strong { font-size: 13px; font-weight: 600; display: block; }
+.option-item-text span { font-size: 11px; color: var(--text2); margin-top: 2px; display: block; }
+.date-row {
+  display: flex; gap: 12px; align-items: center; flex-wrap: wrap;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  margin-bottom: 12px;
+}
+.date-row label { font-size: 13px; font-weight: 600; color: var(--text2); white-space: nowrap; }
+.date-row input[type=date] {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  color: var(--text);
+  padding: 8px 12px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 13px;
+  flex: 1;
+}
+.date-row input[type=date]:focus { outline: none; border-color: var(--primary); }
+
+/* ── PROGRESS ── */
+.progress-card {
+  display: none;
+  background: linear-gradient(135deg, var(--primary-pale) 0%, #f0f8ff 100%);
+  border: 1px solid var(--primary-pale2);
+  border-radius: var(--radius-xl);
+  padding: 32px;
+  margin-bottom: 20px;
+  text-align: center;
+  box-shadow: var(--shadow);
+}
+.progress-card.visible { display: block; }
+.progress-title { font-size: 17px; font-weight: 700; color: var(--primary); margin-bottom: 6px; }
+.progress-subtitle { font-size: 13px; color: var(--text2); margin-bottom: 22px; font-family: 'DM Mono', monospace; }
+.progress-bar-outer {
+  height: 8px;
+  background: var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+.progress-bar-inner {
+  height: 100%;
+  background: linear-gradient(90deg, var(--primary) 0%, #38b2ac 100%);
+  border-radius: 4px;
+  transition: width 0.4s cubic-bezier(0.25,0.46,0.45,0.94);
+  width: 0%;
+}
+.progress-pct { font-size: 13px; font-weight: 700; color: var(--primary); font-family: 'DM Mono', monospace; }
+
+/* ── EDITOR PAGE ── */
+.editor-intro {
+  background: linear-gradient(135deg, var(--accent-light) 0%, #fff9ee 100%);
+  border: 1px solid #f0d080;
+  border-radius: var(--radius-xl);
+  padding: 22px 26px;
+  margin-bottom: 22px;
+  display: flex; align-items: center; gap: 16px;
+}
+.editor-intro-icon { font-size: 32px; flex-shrink: 0; }
+.editor-intro h3 { font-size: 16px; font-weight: 700; color: #7a5000; }
+.editor-intro p { font-size: 13px; color: #9a7020; margin-top: 4px; line-height: 1.4; }
+.clinic-editor-list { display: flex; flex-direction: column; gap: 10px; }
+.clinic-editor-row {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  transition: border-color 0.15s;
+}
+.clinic-editor-row:hover { border-color: var(--border2); }
+.clinic-editor-row .row-num {
+  width: 26px; height: 26px;
+  background: var(--primary-pale);
+  color: var(--primary);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.clinic-editor-row input.edit-label {
+  flex: 1;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 7px 12px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+.clinic-editor-row input.edit-label:focus { outline: none; border-color: var(--primary); }
+.clinic-editor-row textarea.edit-locs {
+  flex: 2;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 7px 12px;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: var(--text2);
+  resize: vertical;
+  min-height: 42px;
+}
+.clinic-editor-row textarea.edit-locs:focus { outline: none; border-color: var(--primary); }
+.del-btn {
+  background: none; border: none; color: var(--text3);
+  cursor: pointer; padding: 6px; border-radius: 6px;
+  font-size: 18px; transition: all 0.15s; flex-shrink: 0;
+}
+.del-btn:hover { color: var(--red); background: var(--red-light); }
+.add-clinic-row {
+  display: flex; gap: 10px;
+  background: var(--surface);
+  border: 2px dashed var(--border);
+  border-radius: var(--radius);
+  padding: 14px;
+}
+.add-clinic-row input {
+  flex: 1;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 13px;
+  color: var(--text);
+}
+.add-clinic-row input:focus { outline: none; border-color: var(--primary); }
+.col-labels {
+  display: flex; gap: 10px; padding: 0 14px;
+  margin-bottom: 6px;
+}
+.col-labels span { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text3); }
+.col-labels .l1 { width: 26px; flex-shrink: 0; }
+.col-labels .l2 { flex: 1; }
+.col-labels .l3 { flex: 2; }
+.col-labels .l4 { width: 60px; }
+
+/* ── TOAST ── */
+.toast {
+  position: fixed; bottom: 28px; right: 28px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 14px 22px;
+  font-size: 14px;
+  font-weight: 500;
+  z-index: 999;
+  display: none;
+  box-shadow: var(--shadow-lg);
+  gap: 10px;
+  align-items: center;
+  max-width: 380px;
+}
+.toast.visible { display: flex; animation: slideUp 0.25s ease; }
+.toast.ok { border-color: #a0dcc0; background: #f0fbf6; color: var(--green); }
+.toast.err { border-color: #f0b0a8; background: #fff5f4; color: var(--red); }
+.toast.info { border-color: var(--primary-pale2); background: var(--primary-pale); color: var(--primary); }
+@keyframes slideUp { from { transform: translateY(12px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+/* ── EMPTY STATE ── */
+.empty-state { text-align: center; padding: 40px; color: var(--text3); font-size: 14px; }
+
+/* ── DIVIDER ── */
+.divider { height: 1px; background: var(--border); margin: 24px 0; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 700px) {
+  header { padding: 0 16px; }
+  .header-badge { display: none; }
+  .hero { padding: 24px 16px; }
+  .hero-stats { display: none; }
+  .container { padding: 20px 12px 50px; }
+  .clinic-grid { grid-template-columns: 1fr 1fr; }
+  .option-grid { grid-template-columns: 1fr; }
+  .col-labels { display: none; }
+  .steps { gap: 0; }
+  .step .step-label { display: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- ── HEADER ── -->
+<header>
+  <div class="header-inner">
+    <div class="logo-wrap">
+      <div class="logo-icon">🏥</div>
+      <div class="logo-text">
+        <h1>Palmetto Infusion</h1>
+        <p>Clinic Calendar Sorter</p>
+      </div>
+    </div>
+    <div class="header-spacer"></div>
+    <div class="header-badge">XLSX Processor</div>
+    <div class="header-nav">
+      <button class="nav-btn active" onclick="showPage('sorter')" id="navSorter">📋 Sort Clinics</button>
+      <button class="nav-btn" onclick="showPage('editor')" id="navEditor">⚙️ Manage Clinics</button>
+    </div>
+  </div>
+</header>
+
+<!-- ── HERO ── -->
+<div class="hero" id="heroBar">
+  <div class="hero-inner">
+    <div class="hero-text">
+      <h2>Smart Appointment Sorter</h2>
+      <p>Upload your scheduling export and instantly generate sorted, clinic-specific Excel files — ready to distribute in seconds.</p>
+    </div>
+    <div class="hero-stats" id="heroStats">
+      <div class="hero-stat">
+        <div class="num" id="heroClinicCount">17</div>
+        <div class="lbl">Active Clinics</div>
+      </div>
+      <div class="hero-stat">
+        <div class="num" id="heroApptCount">—</div>
+        <div class="lbl">Appointments</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── MAIN ── -->
+<div class="container">
+
+  <!-- ─── SORTER PAGE ─── -->
+  <div class="page active" id="pageSorter">
+
+    <!-- Step Indicator -->
+    <div class="steps" id="stepBar">
+      <div class="step active" id="step1">
+        <div class="step-num">1</div>
+        <div class="step-label">Upload File</div>
+      </div>
+      <div class="step-divider"></div>
+      <div class="step" id="step2">
+        <div class="step-num">2</div>
+        <div class="step-label">Select Clinics</div>
+      </div>
+      <div class="step-divider"></div>
+      <div class="step" id="step3">
+        <div class="step-num">3</div>
+        <div class="step-label">Configure</div>
+      </div>
+      <div class="step-divider"></div>
+      <div class="step" id="step4">
+        <div class="step-num">4</div>
+        <div class="step-label">Export</div>
+      </div>
+    </div>
+
+    <!-- Drop Zone -->
+    <div class="drop-zone" id="dropZone">
+      <div class="dz-icon">📂</div>
+      <h2>Drop your Excel file here</h2>
+      <p>Upload your scheduling export (.xlsx) and we'll automatically<br>detect all clinic appointments and sort them for you.</p>
+      <button class="btn btn-primary" onclick="document.getElementById('fileInput').click()">📁 Choose File</button>
+      <input type="file" id="fileInput" accept=".xlsx,.xls">
+      <div class="drop-zone-formats">
+        <span style="font-size:12px;color:var(--text3)">Supported:</span>
+        <span class="format-badge">.XLSX</span>
+        <span class="format-badge">.XLS</span>
+      </div>
+    </div>
+
+    <!-- File Info Bar -->
+    <div class="file-info" id="fileInfo">
+      <div class="file-icon-wrap">📊</div>
+      <div>
+        <div class="file-name" id="fileNameDisplay">—</div>
+        <div class="file-meta" id="fileMetaDisplay">—</div>
+      </div>
+      <div class="btn-group" style="margin-left:auto">
+        <button class="btn btn-secondary btn-sm" onclick="resetFile()">✕ Remove</button>
+      </div>
+    </div>
+
+    <!-- Config Panel -->
+    <div id="configPanel" style="display:none">
+
+      <!-- Stats -->
+      <div class="stat-grid" id="summaryGrid"></div>
+
+      <!-- Clinics -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <div class="card-icon blue">📍</div>
+            <div>
+              <h3>Select Clinics to Export</h3>
+              <p id="selCountText">All clinics selected</p>
+            </div>
+          </div>
+          <div class="btn-group">
+            <button class="btn btn-secondary btn-sm" onclick="toggleAll(true)">✓ All</button>
+            <button class="btn btn-secondary btn-sm" onclick="toggleAll(false)">✗ None</button>
+          </div>
+        </div>
+        <div class="clinic-grid" id="clinicGrid"></div>
+      </div>
+
+      <!-- Options -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <div class="card-icon amber">⚙️</div>
+            <div>
+              <h3>Export Options</h3>
+              <p>Configure date range and processing settings</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-label">📅 Date Filter (optional)</div>
+        <div class="date-row">
+          <label>From</label>
+          <input type="date" id="dateFrom">
+          <label>To</label>
+          <input type="date" id="dateTo">
+          <button class="btn btn-secondary btn-sm" onclick="clearDates()">Clear</button>
+        </div>
+
+        <div class="divider"></div>
+        <div class="section-label">🔧 Processing Options</div>
+        <div class="option-grid">
+          <label class="option-item">
+            <input type="checkbox" id="optSameDay" checked>
+            <div class="option-item-text">
+              <strong>Same Day Sheet</strong>
+              <span>Create a separate sheet for today's appointments at the top of the workbook</span>
+            </div>
+          </label>
+          <label class="option-item">
+            <input type="checkbox" id="optRemoveYes" checked>
+            <div class="option-item-text">
+              <strong>Clear Confirmed "Yes"</strong>
+              <span>Remove "Yes" from the Confirmed column to allow fresh confirmation</span>
+            </div>
+          </label>
+          <label class="option-item">
+            <input type="checkbox" id="optSortByLocation" checked>
+            <div class="option-item-text">
+              <strong>Sort by Location &amp; Time</strong>
+              <span>Order rows by location name, then appointment date and start time</span>
+            </div>
+          </label>
+          <label class="option-item">
+            <input type="checkbox" id="optSkipEmpty" checked>
+            <div class="option-item-text">
+              <strong>Skip Empty Clinic Sheets</strong>
+              <span>Don't create sheets for clinics that have zero appointments in range</span>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <!-- Action Bar -->
+      <div class="card" style="background: linear-gradient(135deg, #f0f8ff 0%, var(--primary-pale) 100%); border-color: var(--primary-pale2);">
+        <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
+          <div>
+            <div style="font-size:16px;font-weight:700;color:var(--primary)">Ready to Export</div>
+            <div style="font-size:13px;color:var(--text2);margin-top:3px" id="exportReadyText">Configure your settings above, then generate your sorted Excel file.</div>
+          </div>
+          <div class="btn-group">
+            <button class="btn btn-success" id="processBtn" onclick="processFile()">⚡ Generate Sorted Excel</button>
+            <button class="btn btn-secondary" onclick="resetFile()">↺ Reset</button>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- end configPanel -->
+
+    <!-- Progress -->
+    <div class="progress-card" id="progressCard">
+      <div class="progress-title" id="progressTitle">Building your Excel file…</div>
+      <div class="progress-subtitle" id="progressStatus">Reading file…</div>
+      <div class="progress-bar-outer"><div class="progress-bar-inner" id="progressBar"></div></div>
+      <div class="progress-pct" id="progressPct">0%</div>
+    </div>
+
+  </div><!-- end pageSorter -->
+
+  <!-- ─── EDITOR PAGE ─── -->
+  <div class="page" id="pageEditor">
+
+    <div class="editor-intro">
+      <div class="editor-intro-icon">✏️</div>
+      <div>
+        <h3>Clinic Manager — No Code Changes Needed</h3>
+        <p>Add, rename, or remove clinics at any time. Changes save automatically to your browser and persist between sessions. Each clinic can map to multiple location names from your scheduling system — separate multiple names with a comma.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">
+          <div class="card-icon amber">🏥</div>
+          <div>
+            <h3>Clinic Directory</h3>
+            <p id="editorSubtitle">17 clinics configured</p>
+          </div>
+        </div>
+        <div class="btn-group">
+          <button class="btn btn-secondary btn-sm" onclick="resetToDefaults()">↺ Reset to Defaults</button>
+          <button class="btn btn-success btn-sm" onclick="saveEditor()">💾 Save Changes</button>
+        </div>
+      </div>
+
+      <div class="col-labels">
+        <span class="l1">#</span>
+        <span class="l2">Short Label (tab name)</span>
+        <span class="l3">Full Location Name(s) from scheduling system — comma separated</span>
+        <span class="l4">Remove</span>
+      </div>
+
+      <div class="clinic-editor-list" id="clinicEditorList"></div>
+
+      <div class="divider"></div>
+      <div class="section-label">➕ Add New Clinic</div>
+      <div class="add-clinic-row">
+        <input type="text" id="newLabel" placeholder="Short label  e.g. Florence">
+        <input type="text" id="newLocs" placeholder="Full location name(s)  e.g. Palmetto Infusion Florence, Palmetto Infusion Florence North">
+        <button class="btn btn-amber btn-sm" onclick="addClinic()">Add Clinic</button>
+      </div>
+    </div>
+
+    <div class="card" style="background: var(--green-light); border-color: #a0d8bc;">
+      <div style="display:flex; gap:14px; align-items:center;">
+        <div style="font-size:28px">💡</div>
+        <div>
+          <div style="font-weight:700;color:var(--green);font-size:15px">Pro Tips</div>
+          <ul style="font-size:13px;color:#2a6646;margin-top:6px;padding-left:18px;line-height:1.8">
+            <li>The <strong>Short Label</strong> becomes the Excel sheet/tab name — keep it under 20 characters.</li>
+            <li>If a clinic has multiple locations (like Raleigh + North Raleigh), separate them with a comma.</li>
+            <li>The Full Location Name must match <em>exactly</em> what appears in your scheduling export.</li>
+            <li>Changes are saved to your browser and will persist the next time you open this file.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end pageEditor -->
+
+</div><!-- end container -->
+
+<div class="toast" id="toast"></div>
+
+<script>
+const DEFAULT_CLINIC_MAP = {
+  'Aiken':       ['Palmetto Infusion Aiken'],
+  'Concord':     ['Palmetto Infusion Concord'],
+  'Charlotte':   ['Palmetto Infusion Charlotte'],
+  'East Cola':   ['Palmetto Infusion East Columbia'],
+  'Eastern NC':  ['Palmetto Infusion Eastern NC - Greenville'],
+  'Hickory':     ['Palmetto Infusion Hickory'],
+  'Gastonia':    ['Palmetto Infusion Gastonia'],
+  'Mt Pleasant': ['Palmetto Infusion Mount Pleasant'],
+  'Pawleys':     ['Palmetto Infusion Pawleys Island'],
+  'Raleigh':     ['Palmetto Infusion Raleigh', 'Palmetto Infusion North Raleigh'],
+  'Rock Hill':   ['Palmetto Infusion Rock Hill'],
+  'Summer':      ['Palmetto Infusion Summerville'],
+  'Supply':      ['Palmetto Infusion Supply'],
+  'Sumter':      ['Palmetto Infusion Sumter'],
+  'West Ashley': ['Palmetto Infusion West Ashley'],
+  'West Cola':   ['Palmetto Infusion West Columbia'],
+  'Wilmington':  ['Palmetto Infusion Wilmington'],
+};
+
+const STORAGE_KEY = 'palmetto_clinic_map_v2';
+
+function loadClinicMap() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) return JSON.parse(saved);
+  } catch(e) {}
+  return JSON.parse(JSON.stringify(DEFAULT_CLINIC_MAP));
+}
+
+function saveClinicMap(map) {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(map)); } catch(e) {}
+}
+
+let CLINIC_MAP = loadClinicMap();
+let rawData = [], fileObj = null, clinicCounts = {}, selectedClinics = new Set();
+const todayStr = new Date().toISOString().slice(0, 10);
+
+function getAllowedFull() {
+  const s = new Set();
+  Object.values(CLINIC_MAP).forEach(arr => arr.forEach(v => s.add(v)));
+  return s;
+}
+
+/* ── PAGES ── */
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page' + name.charAt(0).toUpperCase() + name.slice(1)).classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  if (name === 'sorter') {
+    document.getElementById('navSorter').classList.add('active');
+    document.getElementById('heroBar').style.display = '';
+  } else {
+    document.getElementById('navEditor').classList.add('active');
+    document.getElementById('heroBar').style.display = 'none';
+    renderEditor();
+  }
+}
+
+/* ── HERO COUNTER ── */
+function updateHeroCount() {
+  document.getElementById('heroClinicCount').textContent = Object.keys(CLINIC_MAP).length;
+}
+updateHeroCount();
+
+/* ── DROP ZONE ── */
+const dropZone = document.getElementById('dropZone');
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', e => { e.preventDefault(); dropZone.classList.remove('drag-over'); if (e.dataTransfer.files[0]) loadFile(e.dataTransfer.files[0]); });
+dropZone.addEventListener('click', () => document.getElementById('fileInput').click());
+document.getElementById('fileInput').addEventListener('change', e => { if (e.target.files[0]) loadFile(e.target.files[0]); });
+
+function loadFile(f) {
+  fileObj = f;
+  const reader = new FileReader();
+  reader.onload = evt => {
+    try {
+      const wb = XLSX.read(evt.target.result, { type: 'array', cellDates: true });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      rawData = XLSX.utils.sheet_to_json(ws, { defval: '' });
+      buildConfig(f);
+    } catch(e) { showToast('❌ Could not read file: ' + e.message, 'err'); }
+  };
+  reader.readAsArrayBuffer(f);
+}
+
+function buildConfig(f) {
+  clinicCounts = {};
+  Object.keys(CLINIC_MAP).forEach(k => clinicCounts[k] = 0);
+  const allowedFull = getAllowedFull();
+  let totalAllowed = 0, sameDay = 0;
+  rawData.forEach(row => {
+    const loc = row['Appointments Location Name'] || '';
+    if (!allowedFull.has(loc)) return;
+    totalAllowed++;
+    Object.entries(CLINIC_MAP).forEach(([label, locs]) => { if (locs.includes(loc)) clinicCounts[label]++; });
+    if (getDateStr(row['Appointments End Date']) === todayStr) sameDay++;
+  });
+
+  document.getElementById('summaryGrid').innerHTML = `
+    <div class="stat-card"><div class="num">${rawData.length.toLocaleString()}</div><div class="lbl">Total Rows</div></div>
+    <div class="stat-card"><div class="num">${totalAllowed.toLocaleString()}</div><div class="lbl">Matched Appts</div></div>
+    <div class="stat-card green"><div class="num">${sameDay}</div><div class="lbl">Same Day</div></div>
+    <div class="stat-card amber"><div class="num">${Object.keys(CLINIC_MAP).length}</div><div class="lbl">Clinics</div></div>
+  `;
+  document.getElementById('heroApptCount').textContent = totalAllowed.toLocaleString();
+
+  selectedClinics = new Set(Object.keys(CLINIC_MAP));
+  const grid = document.getElementById('clinicGrid');
+  grid.innerHTML = '';
+  Object.keys(CLINIC_MAP).forEach(label => {
+    const cnt = clinicCounts[label] || 0;
+    const div = document.createElement('div');
+    div.className = 'clinic-item selected';
+    div.dataset.label = label;
+    div.innerHTML = `
+      <input type="checkbox" id="chk_${label}" checked onchange="toggleClinic('${label}')">
+      <label for="chk_${label}">${label}</label>
+      <span class="count">${cnt}</span>
+    `;
+    div.addEventListener('click', e => { if (e.target.tagName !== 'INPUT') document.getElementById('chk_' + label).click(); });
+    grid.appendChild(div);
+  });
+
+  document.getElementById('fileNameDisplay').textContent = f.name;
+  document.getElementById('fileMetaDisplay').textContent = (f.size / 1024).toFixed(1) + ' KB · ' + rawData.length.toLocaleString() + ' rows loaded';
+  document.getElementById('fileInfo').classList.add('visible');
+  dropZone.style.display = 'none';
+  document.getElementById('configPanel').style.display = 'block';
+  document.getElementById('progressCard').classList.remove('visible');
+
+  setStep(2);
+  updateSelCount();
+  showToast('✅ File loaded — ' + totalAllowed + ' matching appointments found', 'ok');
+}
+
+function getDateStr(val) {
+  if (!val) return '';
+  if (val instanceof Date) return val.toISOString().slice(0, 10);
+  if (typeof val === 'number') { const d = XLSX.SSF.parse_date_code(val); return `${d.y}-${String(d.m).padStart(2,'0')}-${String(d.d).padStart(2,'0')}`; }
+  if (typeof val === 'string') return val.slice(0, 10);
+  return '';
+}
+
+function toggleClinic(label) {
+  const chk = document.getElementById('chk_' + label);
+  const item = document.querySelector(`.clinic-item[data-label="${label}"]`);
+  if (chk.checked) { selectedClinics.add(label); item.classList.add('selected'); }
+  else { selectedClinics.delete(label); item.classList.remove('selected'); }
+  updateSelCount();
+}
+
+function toggleAll(state) {
+  Object.keys(CLINIC_MAP).forEach(label => {
+    const chk = document.getElementById('chk_' + label);
+    if (chk) { chk.checked = state; toggleClinic(label); }
+  });
+}
+
+function updateSelCount() {
+  const total = [...selectedClinics].reduce((s, l) => s + (clinicCounts[l] || 0), 0);
+  document.getElementById('selCountText').textContent = `${selectedClinics.size} of ${Object.keys(CLINIC_MAP).length} clinics · ${total} appointments`;
+  document.getElementById('exportReadyText').textContent = `${selectedClinics.size} clinic(s) · ${total} appointment(s) will be exported.`;
+}
+
+function clearDates() { document.getElementById('dateFrom').value = ''; document.getElementById('dateTo').value = ''; }
+
+function resetFile() {
+  rawData = []; fileObj = null;
+  document.getElementById('fileInput').value = '';
+  dropZone.style.display = '';
+  document.getElementById('fileInfo').classList.remove('visible');
+  document.getElementById('configPanel').style.display = 'none';
+  document.getElementById('progressCard').classList.remove('visible');
+  document.getElementById('heroApptCount').textContent = '—';
+  selectedClinics = new Set(Object.keys(CLINIC_MAP));
+  setStep(1);
+}
+
+function setStep(n) {
+  for (let i = 1; i <= 4; i++) {
+    const el = document.getElementById('step' + i);
+    el.classList.remove('active', 'done');
+    if (i < n) el.classList.add('done');
+    else if (i === n) el.classList.add('active');
+  }
+}
+
+function setProgress(pct, msg) {
+  document.getElementById('progressBar').style.width = pct + '%';
+  document.getElementById('progressStatus').textContent = msg;
+  document.getElementById('progressPct').textContent = Math.round(pct) + '%';
+}
+
+async function processFile() {
+  if (!rawData.length) return showToast('No file loaded', 'err');
+  if (!selectedClinics.size) return showToast('Select at least one clinic', 'err');
+
+  const optSameDay = document.getElementById('optSameDay').checked;
+  const optRemoveYes = document.getElementById('optRemoveYes').checked;
+  const optSort = document.getElementById('optSortByLocation').checked;
+  const optSkipEmpty = document.getElementById('optSkipEmpty').checked;
+  const dateFrom = document.getElementById('dateFrom').value;
+  const dateTo = document.getElementById('dateTo').value;
+
+  setStep(4);
+  document.getElementById('progressCard').classList.add('visible');
+  document.getElementById('progressTitle').textContent = 'Building your Excel file…';
+  setProgress(5, 'Filtering rows…');
+  await sleep(30);
+
+  const selectedFull = new Set();
+  selectedClinics.forEach(label => CLINIC_MAP[label].forEach(f => selectedFull.add(f)));
+
+  let filtered = rawData.filter(row => {
+    const loc = row['Appointments Location Name'] || '';
+    if (!selectedFull.has(loc)) return false;
+    const d = getDateStr(row['Appointments End Date']);
+    if (dateFrom && d < dateFrom) return false;
+    if (dateTo && d > dateTo) return false;
+    return true;
+  });
+
+  setProgress(20, 'Cleaning confirmed column…');
+  await sleep(20);
+  if (optRemoveYes) {
+    filtered = filtered.map(row => {
+      const r = { ...row };
+      const key = 'Appointments Confirmed (Yes / No)';
+      if (String(r[key]).trim().toUpperCase() === 'YES') r[key] = '';
+      return r;
+    });
+  }
+
+  setProgress(35, 'Splitting same-day appointments…');
+  await sleep(20);
+  const sameDayRows = filtered.filter(r => getDateStr(r['Appointments End Date']) === todayStr);
+  const otherRows = filtered.filter(r => getDateStr(r['Appointments End Date']) !== todayStr);
+
+  function sortRows(rows) {
+    if (!optSort) return rows;
+    return [...rows].sort((a, b) => {
+      const la = a['Appointments Location Name'] || '', lb = b['Appointments Location Name'] || '';
+      if (la < lb) return -1; if (la > lb) return 1;
+      const da = getDateStr(a['Appointments End Date']), db = getDateStr(b['Appointments End Date']);
+      if (da < db) return -1; if (da > db) return 1;
+      return String(a['Appointments Start Local Tz Time of Day'] || '').localeCompare(String(b['Appointments Start Local Tz Time of Day'] || ''));
+    });
+  }
+
+  setProgress(50, 'Creating workbook…');
+  await sleep(20);
+  const newWb = XLSX.utils.book_new();
+  const labels = [...selectedClinics];
+  const total = labels.length + (optSameDay ? 1 : 0);
+  let done = 0;
+
+  if (optSameDay && sameDayRows.length) {
+    const ws = XLSX.utils.json_to_sheet(sortRows(sameDayRows));
+    styleSheet(ws);
+    XLSX.utils.book_append_sheet(newWb, ws, 'SAME DAY');
+    done++;
+    setProgress(50 + (done / total) * 45, `Created SAME DAY sheet (${sameDayRows.length} rows)…`);
+    await sleep(10);
+  }
+
+  for (const label of labels) {
+    const locs = CLINIC_MAP[label];
+    const clinicRows = otherRows.filter(r => locs.includes(r['Appointments Location Name']));
+    if (optSkipEmpty && !clinicRows.length) { done++; continue; }
+    const ws = XLSX.utils.json_to_sheet(sortRows(clinicRows));
+    styleSheet(ws);
+    XLSX.utils.book_append_sheet(newWb, ws, label.slice(0, 31));
+    done++;
+    setProgress(50 + (done / total) * 45, `Created sheet: ${label} (${clinicRows.length} rows)…`);
+    await sleep(8);
+  }
+
+  setProgress(98, 'Writing file…');
+  await sleep(30);
+  const fname = `Palmetto_Clinic_Sorted_${todayStr}.xlsx`;
+  XLSX.writeFile(newWb, fname);
+  setProgress(100, `Done! ${newWb.SheetNames.length} sheets exported.`);
+  document.getElementById('progressTitle').textContent = '✅ Export Complete!';
+  showToast('✅ ' + fname + ' downloaded!', 'ok');
+  setStep(4);
+  document.getElementById('step4').classList.add('done');
+}
+
+function styleSheet(ws) {
+  if (!ws['!ref']) return;
+  ws['!cols'] = [14,16,14,12,12,14,32,22,30,30,28,12].map(w => ({ wch: w }));
+  ws['!freeze'] = { xSplit: 0, ySplit: 1 };
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+function showToast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast visible ' + (type || '');
+  setTimeout(() => t.classList.remove('visible'), 4500);
+}
+
+/* ── EDITOR ── */
+function renderEditor() {
+  const list = document.getElementById('clinicEditorList');
+  const keys = Object.keys(CLINIC_MAP);
+  list.innerHTML = '';
+  document.getElementById('editorSubtitle').textContent = keys.length + ' clinics configured';
+
+  keys.forEach((label, i) => {
+    const locs = CLINIC_MAP[label];
+    const row = document.createElement('div');
+    row.className = 'clinic-editor-row';
+    row.dataset.key = label;
+    row.innerHTML = `
+      <div class="row-num">${i + 1}</div>
+      <input class="edit-label" type="text" value="${escHtml(label)}" placeholder="Short label">
+      <textarea class="edit-locs" rows="1" placeholder="Full location name(s), comma separated">${escHtml(locs.join(', '))}</textarea>
+      <button class="del-btn" onclick="deleteClinic('${escHtml(label)}')" title="Remove clinic">✕</button>
+    `;
+    list.appendChild(row);
+  });
+
+  updateHeroCount();
+}
+
+function escHtml(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function saveEditor() {
+  const rows = document.querySelectorAll('.clinic-editor-row');
+  const newMap = {};
+  let ok = true;
+  rows.forEach(row => {
+    const label = row.querySelector('.edit-label').value.trim();
+    const locsRaw = row.querySelector('.edit-locs').value.trim();
+    if (!label) { showToast('❌ A clinic label is empty — please fill it in or remove that row.', 'err'); ok = false; return; }
+    const locs = locsRaw.split(',').map(s => s.trim()).filter(Boolean);
+    if (!locs.length) { showToast(`❌ "${label}" has no location names. Add at least one.`, 'err'); ok = false; return; }
+    newMap[label] = locs;
+  });
+  if (!ok) return;
+  CLINIC_MAP = newMap;
+  saveClinicMap(CLINIC_MAP);
+  selectedClinics = new Set(Object.keys(CLINIC_MAP));
+  updateHeroCount();
+  renderEditor();
+  showToast('✅ Clinic directory saved! ' + Object.keys(CLINIC_MAP).length + ' clinics active.', 'ok');
+}
+
+function deleteClinic(label) {
+  const decoded = label.replace(/&amp;/g,'&').replace(/&quot;/g,'"').replace(/&lt;/g,'<').replace(/&gt;/g,'>');
+  if (!confirm(`Remove "${decoded}" from the clinic list?`)) return;
+  delete CLINIC_MAP[decoded];
+  saveClinicMap(CLINIC_MAP);
+  selectedClinics.delete(decoded);
+  updateHeroCount();
+  renderEditor();
+  showToast(`🗑️ "${decoded}" removed.`, 'info');
+}
+
+function addClinic() {
+  const label = document.getElementById('newLabel').value.trim();
+  const locsRaw = document.getElementById('newLocs').value.trim();
+  if (!label) return showToast('Please enter a short label for the clinic.', 'err');
+  if (!locsRaw) return showToast('Please enter at least one full location name.', 'err');
+  if (CLINIC_MAP[label]) return showToast(`"${label}" already exists — edit it above.`, 'err');
+  const locs = locsRaw.split(',').map(s => s.trim()).filter(Boolean);
+  CLINIC_MAP[label] = locs;
+  saveClinicMap(CLINIC_MAP);
+  selectedClinics.add(label);
+  document.getElementById('newLabel').value = '';
+  document.getElementById('newLocs').value = '';
+  updateHeroCount();
+  renderEditor();
+  showToast(`✅ "${label}" added with ${locs.length} location(s)!`, 'ok');
+}
+
+function resetToDefaults() {
+  if (!confirm('Reset to the default 17 clinics? Any custom additions will be removed.')) return;
+  CLINIC_MAP = JSON.parse(JSON.stringify(DEFAULT_CLINIC_MAP));
+  saveClinicMap(CLINIC_MAP);
+  selectedClinics = new Set(Object.keys(CLINIC_MAP));
+  updateHeroCount();
+  renderEditor();
+  showToast('↺ Reset to default 17 clinics.', 'info');
+}
+</script>
+</body>
+</html>
